@@ -1,0 +1,39 @@
+recode the ls command
+using these
+◦ write
+◦ opendir
+◦ readdir
+◦ closedir
+◦ stat
+◦ lstat
+◦ getpwuid
+◦ getgrgid
+◦ listxattr
+◦ getxattr
+◦ time
+◦ ctime
+◦ readlink
+◦ malloc
+◦ free
+◦ perror
+◦ strerror
+◦ exit
+
+to implement at least the behaviour flags
+	-l, -R, -a, -r and -t
+
+-l
+	use a long listing format
+	◦ You do not have to deal with the multiple column format for the exit when
+		the option -l isn’t in the arguments.
+
+-a, --all
+		do not ignore entries starting with .
+
+-r, --reverse
+		reverse order while sorting
+
+-R, --recursive
+		list subdirectories recursively
+
+-t     sort by time, newest first; see --time
