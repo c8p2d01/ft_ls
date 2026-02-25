@@ -1,0 +1,4 @@
+./build/*
+./ft_libft/*
+ft_ls
+*.o

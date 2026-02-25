@@ -25,9 +25,14 @@ OS:=		$(shell uname -s)
 
 .PHONY: all clean fclean re
 
-all:
+all: requirements
 	make -C $(LIB)
 	make -j $(nproc) $(NAME)
+
+requirements:
+	@if [ ! -f $(LIB)Makefile ]; then \
+		git submodule update --init --recursive ; \
+	fi
 
 $(OBJS): $(BUILD)%.o : $(SOURCE)%.c
 	@mkdir -p $(dir $@)
