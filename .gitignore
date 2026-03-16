@@ -2,3 +2,11 @@
 ./ft_libft/*
 ft_ls
 *.o
+.vscode/*
+*.dSYM
+*.swp
+*.swo
+*.out
+*.a
+*.so
+*.log

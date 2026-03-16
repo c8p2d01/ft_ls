@@ -12,6 +12,7 @@ LIB:=ft_libft/
 
 # Source Files:
 SRCFILES =	\
+			ft_expand_ls.c \
 			ft_init_ls.c \
 			ft_ls.c \
 
@@ -26,8 +27,8 @@ OS:=		$(shell uname -s)
 .PHONY: all clean fclean re
 
 all: requirements
-	make -C $(LIB)
-	make -j $(nproc) $(NAME)
+	@make -s -C $(LIB)
+	@make -s -j $(nproc) $(NAME)
 
 requirements:
 	@if [ ! -f $(LIB)Makefile ]; then \

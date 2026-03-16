@@ -1,4 +1,4 @@
-/* ************************************************************************** */
+ /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   ft_init_ls.c                                       :+:      :+:    :+:   */
@@ -39,11 +39,25 @@ static void	read_options(char *arg)
 	}
 }
 
+t_ls_dir	*new_dir(char *name, char *path)
+{
+	t_ls_dir	*def;
+
+	def = ft_calloc(1, sizeof(t_ls_dir));
+	if (def)
+	{
+		def->name = ft_strdup(name);
+		if (path)
+			def->path = ft_strdup(path);
+	}
+		return (def);
+}
+
 void	init_ls_vars(int argc, char **argv)
 {
-	t_ls_vars	*ls_v;
-	int			i;
-	t_list		*new_dir;
+	t_ls_vars		*ls_v;
+	int				i;
+	t_list			*new__dir;
 
 	ls_v = *persist_ls();
 	if (!ls_v)
@@ -58,11 +72,14 @@ void	init_ls_vars(int argc, char **argv)
 			read_options(argv[i] + 1);
 		else
 		{
-			new_dir = ft_lstnew((void *)argv[i]);
-			if (!new_dir)
+			new__dir = ft_lstnew(new_dir(NULL, argv[i]));
+			if (!new__dir)
 				continue ;
-			ft_lstadd_back(&(ls_v->dirs), new_dir);
+			ft_lstadd_back(&(ls_v->root_content), new__dir);
 		}
 		i++;
 	}
+	if (!ls_v->root_content)
+		ft_lstadd_front(&ls_v->root_content, ft_lstnew(new_dir("", ".")));
+	ls_v->pwd = get_value("PWD");
 }
