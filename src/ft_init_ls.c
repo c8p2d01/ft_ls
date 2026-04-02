@@ -19,10 +19,11 @@ t_ls_vars **persist_ls(void)
 	return (&ls_vars);
 }
 
-static void	read_options(char *arg)
+static bool	read_options(char *arg)
 {
 	t_ls_vars	*ls_v;
-	bool		*arr[5];
+	bool		*arr[6];
+	bool		was_flag;
 	char		*s;
 
 	ls_v = *persist_ls();
@@ -31,33 +32,29 @@ static void	read_options(char *arg)
 	arr[2] = &ls_v->option_r;
 	arr[3] = &ls_v->option_t;
 	arr[4] = &ls_v->option_R;
-	s = "lartR";
-	while (arg && 0[arg] && ft_strchr(s, 0[arg]))
+	arr[5] = &ls_v->option_f;
+	s = "lartRf";
+	was_flag = false;
+	while (arg && arg[0] && ft_strchr(s, arg[0]))
 	{
-		0[arr[ft_strchr(s, 0[arg]) - s]] = true;
+		*arr[ft_strchr(s, arg[0]) - s] = true;
 		arg++;
+		was_flag = true;
 	}
-}
-
-t_ls_dir	*new_dir(char *name, char *path)
-{
-	t_ls_dir	*def;
-
-	def = ft_calloc(1, sizeof(t_ls_dir));
-	if (def)
-	{
-		def->name = ft_strdup(name);
-		if (path)
-			def->path = ft_strdup(path);
-	}
-		return (def);
+	if (ft_strncmp(arg, "-color=auto", 12) == 0)
+		return ((ls_v->color = true));
+	if (!was_flag)
+		return (false);
+	return (true);
 }
 
 void	init_ls_vars(int argc, char **argv)
 {
 	t_ls_vars		*ls_v;
 	int				i;
-	t_list			*new__dir;
+	int				j;
+	t_list			*n_entry;
+	t_ls_entry		*e;
 
 	ls_v = *persist_ls();
 	if (!ls_v)
@@ -66,20 +63,27 @@ void	init_ls_vars(int argc, char **argv)
 		ls_v = *persist_ls();
 	}
 	i = 1;
+	j = 0;
+	ls_v->arg_entries = ft_calloc(argc, sizeof(t_ls_entry *));
 	while (i < argc)
 	{
-		if (argv[i] && argv[i][0] == '-')
-			read_options(argv[i] + 1);
+		if (argv[i] && argv[i][0] == '-' && read_options(argv[i] + 1))
+			;
 		else
 		{
-			new__dir = ft_lstnew(new_dir(NULL, argv[i]));
-			if (!new__dir)
+			ls_v->arg_entries[j] = new_entry();
+			if (!ls_v->arg_entries[j])
 				continue ;
-			ft_lstadd_back(&(ls_v->root_content), new__dir);
+			ls_v->arg_entries[j]->path = ft_strdup(argv[i]);
+			j++;
 		}
 		i++;
 	}
-	if (!ls_v->root_content)
-		ft_lstadd_front(&ls_v->root_content, ft_lstnew(new_dir("", ".")));
+	if (j > 1 || ls_v->option_R)
+		ls_v->path = true;
 	ls_v->pwd = get_value("PWD");
+	if (ls_v->arg_entries[0])
+		return ;
+	ls_v->arg_entries[0] = new_entry();
+	ls_v->arg_entries[0]->path = ft_strdup(".");
 }

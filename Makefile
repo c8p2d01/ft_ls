@@ -7,7 +7,7 @@ SOURCE:=	./src
 
 # Other variables:
 COMPILER:=	cc
-COMPFLAGS:=	-Wall -Werror -Wextra -g
+COMPFLAGS:=	 -g #-Wall -Werror -Wextra
 LIB:=ft_libft/
 
 # Source Files:

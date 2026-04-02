@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ls.h                                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cdahlhof <cdahlhof@student.42.fr>          +#+  +:+       +#+        */
+/*   By: cdahlhof <cdahlhof@students.42wolfsburg    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/10 04:45:55 by cdahlhof          #+#    #+#             */
-/*   Updated: 2025/08/10 06:09:38 by cdahlhof         ###   ########.fr       */
+/*   Updated: 2026/04/01 21:45:59 by cdahlhof         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,19 @@
  * path -> prior found directories, if none were given itll be a ./
  * contents -> the contents of the directory
  */
-typedef struct	s_ls_dir {
-	char	*name;
-	char	*path;
-	t_list	*contents;
-}	t_ls_dir;
+typedef struct	s_ls_entry {
+	char				*path;
+	struct s_ls_entry	**sub_entries;
+	char				*perms;
+	char				*links;
+	char				*user;
+	char				*group;
+	__off_t				size;
+	size_t				total;
+	__time_t			*time;
+	char				*name;
+	size_t				sizebuffer;
+}	t_ls_entry;
 
 /**
  * root content -> paths given by function arguments
@@ -41,21 +49,29 @@ typedef struct	s_ls_dir {
  * errors -> arguments that were unable to be traced (non directory or missing permission etc)
  */
 typedef struct	s_ls_vars {
-	char			*pwd;
-	t_list			*root_content;
-	t_list			*errors;
-	bool			option_l;
-	bool			option_a;
-	bool			option_r;
-	bool			option_t;
-	bool			option_R;
+	char				*pwd;
+	struct s_ls_entry	**arg_entries;;
+	t_list				*errors;
+	bool				option_l;
+	bool				option_a;
+	bool				option_r;
+	bool				option_t;
+	bool				option_R;
+	bool				option_f;
+	bool				color;
+	bool				path;
 	unsigned char	return_value;
 }	t_ls_vars;
 
 t_ls_vars **persist_ls(void);
 
 void		init_ls_vars(int argc, char **argv);
-t_ls_dir	*new_dir(char *name, char *path);
-void		expand_dirs(t_ls_dir *root);
+t_ls_entry	*new_entry();
+void		expand_dirs(t_ls_entry *root);
+int			ls_read(t_ls_entry *entry);
+bool		flagged_min(int a, int b);
+int			ls_sort(t_ls_entry *entry);
+int			ls_recurse(t_ls_entry *entry);
+int			print_flagged(t_ls_entry *entry);
 
 #endif
