@@ -63,15 +63,25 @@ typedef struct	s_ls_vars {
 	unsigned char	return_value;
 }	t_ls_vars;
 
+#define MAX(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+#define MIN(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _b : _a; })
+
 t_ls_vars **persist_ls(void);
 
 void		init_ls_vars(int argc, char **argv);
 t_ls_entry	*new_entry();
 void		expand_dirs(t_ls_entry *root);
-int			ls_read(t_ls_entry *entry);
+void			ls_read(t_ls_entry *entry);
 bool		flagged_min(int a, int b);
-int			ls_sort(t_ls_entry *entry);
-int			ls_recurse(t_ls_entry *entry);
-int			print_flagged(t_ls_entry *entry);
+void			ls_sort(t_ls_entry *entry);
+void			ls_recurse(t_ls_entry *entry);
+void			print_flagged(t_ls_entry *entry);
 
 #endif

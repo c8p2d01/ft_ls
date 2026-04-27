@@ -32,6 +32,7 @@ int	test_access()
 	char			*error;
 	
 	ls_v = *persist_ls();
+	error = NULL;
 	for (int i = 0; ls_v->arg_entries[i]; i++)
 	{
 		d = opendir(ls_v->arg_entries[i]->path);
@@ -49,7 +50,11 @@ int	test_access()
 			ls_v->arg_entries[c - 1] = NULL;
 			i--;
 		}
+		closedir(d);
 	}
+	if (!error)
+		return (0);
+	return (2);
 }
 
 void	sort_input()
@@ -120,6 +125,6 @@ int	main(int argc, char **argv, char **env)
 
 	clear_env();
 
-	// ft_clean_allocs();
+	ft_clean_allocs();
 	return (r_val);
 }

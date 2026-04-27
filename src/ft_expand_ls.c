@@ -106,7 +106,7 @@ char	*connect_path(char *path, char *dir)
 // 	}
 // }
 
-int	ls_read(t_ls_entry *entry)
+void	ls_read(t_ls_entry *entry)
 {
 	DIR			*d;
 	int			i;
@@ -122,7 +122,7 @@ int	ls_read(t_ls_entry *entry)
 		i++;
 	entry->sub_entries = ft_malloc((i + 1) * sizeof(t_ls_entry*));
 	if (!entry->sub_entries)
-		return (1);
+		return ;
 	closedir(d);
 	i = 0;
 	d = opendir(entry->path);
@@ -138,7 +138,7 @@ int	ls_read(t_ls_entry *entry)
 
 		entry->sub_entries[i] = new_entry();
 		if (!entry->sub_entries[i])
-			return (1);
+			return ;
 		entry->sub_entries[i]->perms = ft_strsmerge(10,
 			ft_asprintf("%c", S_ISDIR(fileStat.st_mode) ? 'd' : S_ISLNK(fileStat.st_mode) ? 'l' : '-'),
 			ft_asprintf("%c", S_IRWXU & fileStat.st_mode ? 'r' : '-'),
@@ -187,6 +187,77 @@ bool	flagged_min(int a, int b)
 	return (false);
 }
 
+#include <ctype.h>
+#include <string.h>
+
+int is_alnum_str(const char *s) {
+    while (s && *s) {
+        if (ft_isalnum((unsigned char)*s)) return 1;
+        s++;
+    }
+    return 0;
+}
+
+// Custom character priority
+int char_rank(char c) {
+    if (ft_isalnum((unsigned char)c)) return 2;   // highest priority
+    if (c == '_') return 1;                    // special middle
+    return 0;                                  // punctuation
+}
+
+// Get next "significant" character
+char* next_valid(char *s) {
+    while (s && *s && !ft_isalnum((unsigned char)*s) && *s != '_') {
+        s++;
+    }
+    return s;
+}
+
+int custom_strcmp(char *a, char *b) {
+    int a_has = is_alnum_str(a);
+    int b_has = is_alnum_str(b);
+
+    // Case 1: neither has alnum → normal strcmp
+    if (!a_has && !b_has) {
+        return ft_strncmp(a, b, MIN(ft_strlen(a), ft_strlen(b)));
+    }
+
+    // Case 2: only one has alnum
+    if (a_has != b_has) {
+        return a_has - b_has; // non-alnum first
+    }
+
+    // Case 3: both have alnum → filtered compare
+    char *pa = a;
+    char *pb = b;
+
+    while (*pa || *pb) {
+        pa = next_valid(pa);
+        pb = next_valid(pb);
+
+        if (!*pa || !*pb) break;
+
+        int ra = char_rank(*pa);
+        int rb = char_rank(*pb);
+
+        if (ra != rb) return ra - rb;
+
+        char ca = ft_tolower((unsigned char)*pa);
+        char cb = ft_tolower((unsigned char)*pb);
+
+        if (ca != cb) return ca - cb;
+
+        // case-sensitive tiebreak
+        if (*pa != *pb) return *pa - *pb;
+
+        pa++;
+        pb++;
+    }
+
+    // fallback: shorter string first
+    return strlen(a) - strlen(b);
+}
+
 int	find_next_entry(t_ls_entry **set, int set_size)
 {
 	int			i;
@@ -206,13 +277,13 @@ int	find_next_entry(t_ls_entry **set, int set_size)
 			return (r);
 		if (ls_v->option_t && flagged_min(*set[r]->time, *set[i]->time))
 			r = i;
-		else if (flagged_min(ft_strncmp(set[r]->name, set[i]->name, ft_strlen(set[i]->name)), 0))
+		else if (flagged_min(custom_strcmp(set[r]->name, set[i]->name), 0))
 			r = i;
 	}
 	return (r);
 }
 
-int	ls_sort(t_ls_entry *entry)
+void	ls_sort(t_ls_entry *entry)
 {
 	int			i;
 	int			l;
@@ -224,7 +295,7 @@ int	ls_sort(t_ls_entry *entry)
 		i++;
 	ordered = ft_calloc((i + 1), sizeof(t_ls_entry));
 	if (!ordered)
-		return (1);
+		return ;
 	l = 0;
 	while (l < i)
 	{
@@ -238,14 +309,14 @@ int	ls_sort(t_ls_entry *entry)
 	entry->sub_entries = ordered;
 }
 
-int	ls_recurse(t_ls_entry *entry)
+void	ls_recurse(t_ls_entry *entry)
 {
 	t_ls_vars	*ls_v;
 	int			i;
 
 	ls_v = *persist_ls();
 	if (!ls_v->option_R)
-		return (0);
+		return ;
 	i = 0;
 	while (entry->sub_entries[i])
 	{
@@ -263,7 +334,7 @@ int	ls_recurse(t_ls_entry *entry)
 	}
 }
 
-int	print_flagged(t_ls_entry *entry)
+void	print_flagged(t_ls_entry *entry)
 {
 	t_ls_vars	*ls_v;
 	t_ls_entry	*sub;
