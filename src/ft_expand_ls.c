@@ -74,9 +74,6 @@ char	*connect_path(char *path, char *dir)
 		*(res + ft_strlen(res)) = '/';
 	if (dir)
 		ft_strlcat(res, dir, len);
-	
-	FILE *fi = fopen("CON_PATHS", "w");
-	fprintf(fi, "%s\n", res);
 	return (res);
 }
 
@@ -187,75 +184,79 @@ bool	flagged_min(int a, int b)
 	return (false);
 }
 
-#include <ctype.h>
-#include <string.h>
-
-int is_alnum_str(const char *s) {
-    while (s && *s) {
-        if (ft_isalnum((unsigned char)*s)) return 1;
-        s++;
-    }
-    return 0;
+char *first_alnum(char *s)
+{
+	if (!s)
+		return (NULL);
+	while (s && *s)
+	{
+		if (ft_isalnum(*s))
+			return s;
+		s++;
+	}
+	if (!*s)
+		return (NULL);
+	return (NULL);
 }
 
-// Custom character priority
-int char_rank(char c) {
-    if (ft_isalnum((unsigned char)c)) return 2;   // highest priority
-    if (c == '_') return 1;                    // special middle
-    return 0;                                  // punctuation
+void	str_tolower(char *s)
+{
+	while (s && *s)
+	{
+		if ('A' <= *s && *s <= 'Z')
+			*s |= 1 << 5;
+		s++;
+	}
 }
 
-// Get next "significant" character
-char* next_valid(char *s) {
-    while (s && *s && !ft_isalnum((unsigned char)*s) && *s != '_') {
-        s++;
-    }
-    return s;
-}
+int	custom_strcmp(char *a, char *b)
+{
+	// if (!a && !b)
+	// 	return (0);
+	// if (!a)
+	// 	return -1;
+	// if (!b)
+	// 	return -1;
+	// return (strcoll(a, b));
 
-int custom_strcmp(char *a, char *b) {
-    int a_has = is_alnum_str(a);
-    int b_has = is_alnum_str(b);
+	char *ca = first_alnum(a);
+	char *cb = first_alnum(b);
+	int min = MIN(ft_strlen(a), ft_strlen(b));
+	int res;
 
-    // Case 1: neither has alnum → normal strcmp
-    if (!a_has && !b_has) {
-        return ft_strncmp(a, b, MIN(ft_strlen(a), ft_strlen(b)));
-    }
+	if (min)
+		min++;
+	if (!ca && !cb)
+	{
+		return (ft_strncmp(a, b, min));
+	}
+	if (!ca)
+		return -1;
+	if (!cb)
+		return 1;
 
-    // Case 2: only one has alnum
-    if (a_has != b_has) {
-        return a_has - b_has; // non-alnum first
-    }
-
-    // Case 3: both have alnum → filtered compare
-    char *pa = a;
-    char *pb = b;
-
-    while (*pa || *pb) {
-        pa = next_valid(pa);
-        pb = next_valid(pb);
-
-        if (!*pa || !*pb) break;
-
-        int ra = char_rank(*pa);
-        int rb = char_rank(*pb);
-
-        if (ra != rb) return ra - rb;
-
-        char ca = ft_tolower((unsigned char)*pa);
-        char cb = ft_tolower((unsigned char)*pb);
-
-        if (ca != cb) return ca - cb;
-
-        // case-sensitive tiebreak
-        if (*pa != *pb) return *pa - *pb;
-
-        pa++;
-        pb++;
-    }
-
-    // fallback: shorter string first
-    return strlen(a) - strlen(b);
+	ca = ft_strdup(ca);
+	cb = ft_strdup(cb);
+	str_tolower(ca);
+	str_tolower(cb);
+	res = ft_strncmp(ca, cb, min);
+	ft_free(ca);
+	ft_free(cb);
+	if (res)
+		return (res);
+	ca = first_alnum(a);
+	cb = first_alnum(b);
+	res = ft_strncmp(ca, cb, min);
+	if (res)
+		return (res * -1);
+	ca = ft_strdup(a);
+	cb = ft_strdup(b);
+	str_tolower(ca);
+	str_tolower(cb);
+	res = ft_strncmp(ca, cb, min);
+	ft_free(ca);
+	ft_free(cb);
+	return (res);
 }
 
 int	find_next_entry(t_ls_entry **set, int set_size)
@@ -334,11 +335,28 @@ void	ls_recurse(t_ls_entry *entry)
 	}
 }
 
+void	quoted_name(char *name)
+{
+	int	i = 0;
+	while (name && i[name])
+	{
+		if (!ft_strchr(" #!?&$\\|\'\"", i[name]))
+		{
+			ft_printf("%s", name);
+			return ;
+		}
+		i++;
+	}
+	ft_printf("'%s' ", name);
+	return ;
+}
+
 void	print_flagged(t_ls_entry *entry)
 {
 	t_ls_vars	*ls_v;
 	t_ls_entry	*sub;
 	char		*format;
+	char		*short_time;
 	int			printed;
 
 	ls_v = *persist_ls();
@@ -352,11 +370,15 @@ void	print_flagged(t_ls_entry *entry)
 		sub = entry->sub_entries[i];
 		if ((!ls_v->option_a && sub->name[0] == '.') && !ls_v->option_f)
 			continue ;
-		format = ft_asprintf("%s %s %s %s %%%lild %.16s ", sub->perms, sub->links, sub->user, sub->group, entry->sizebuffer, ctime(sub->time), sub->name);
+		short_time = ft_strdup(ft_strchr(ctime(sub->time), ' '));
+		ft_strrchr(short_time, ':')[0] = 0;
+		format = ft_asprintf("%s %s %s %s %%%lild %.16s ", sub->perms, sub->links, sub->user, sub->group, entry->sizebuffer, short_time);
+		ft_free(short_time);
 		if (ls_v->option_l)
 			ft_printf(format, sub->size);
 		ft_free(format);
-		printed = ft_printf("%s%s", sub->name, ls_v->option_l ? "\n" : "  ");
+		quoted_name (sub->name);
+		printed = ft_printf("%s", ls_v->option_l ? "\n" : "  ");
 	}
 	if (printed)
 		ft_printf("\n");

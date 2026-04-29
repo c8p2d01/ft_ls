@@ -64,7 +64,7 @@ void	init_ls_vars(int argc, char **argv)
 	}
 	i = 1;
 	j = 0;
-	ls_v->arg_entries = ft_calloc(argc, sizeof(t_ls_entry *));
+	ls_v->arg_entries = ft_calloc(argc + 1, sizeof(t_ls_entry *));
 	while (i < argc)
 	{
 		if (argv[i] && argv[i][0] == '-' && read_options(argv[i] + 1))
@@ -79,6 +79,7 @@ void	init_ls_vars(int argc, char **argv)
 		}
 		i++;
 	}
+	ls_v->arg_entries[argc] = NULL;
 	if (j > 1 || ls_v->option_R)
 		ls_v->path = true;
 	ls_v->pwd = get_value("PWD");
