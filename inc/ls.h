@@ -38,7 +38,7 @@ typedef struct	s_ls_entry {
 	char				*group;
 	__off_t				size;
 	size_t				total;
-	__time_t			*time;
+	time_t		time;
 	char				*name;
 	size_t				sizebuffer;
 }	t_ls_entry;

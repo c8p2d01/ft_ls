@@ -11,52 +11,6 @@ void	ft_lstinsert(t_list	*head, t_list *new)
 	head->next = new;
 }
 
-//void	list_contents(t_ls_entrys *current, DIR *d)
-//{
-//	struct dirent	*dirr;
-//	struct stat		fileStat;
-//	t_list		*lstnode;
-
-//	(void)current;
-//	while ((dirr = readdir(d)) != NULL)
-//	{
-//		lstat(dirr->d_name, &fileStat);
-
-//		printf("%hhu\t%s\n", dirr->d_type, dirr->d_name);
-//		if (S_ISDIR(fileStat.st_mode))
-//		{
-//			lstnode = ft_lstnew(new_dir(dirr->d_name, current->name));
-//			ft_lstadd_back(&current->contents, lstnode);
-//			expand_dirs(lstnode);
-//		}
-//	}
-//}
-
-//void	expand_dirs(t_list *begin)
-//{
-//	t_ls_vars		*ls_v;
-//	t_list			*curr;
-//	DIR				*d;
-
-//	ls_v = *persist_ls();
-//	curr = begin;
-//	if (!curr)
-//		curr = ls_v->root_content;
-//	while (curr)
-//	{
-//		sleep(1);
-//		printf("DEBUG %s\n", ((t_ls_entrys *)curr->content)->name);
-//		d = opendir(((t_ls_entrys *)curr->content)->name);
-//		curr->content = ft_lstnew(curr->content);
-//		if (d)
-//		{
-//			list_contents(curr->content, d);
-//		}
-//		// adding error for early error printing
-//		curr = curr->next;
-//	}
-//}
-
 char	*connect_path(char *path, char *dir)
 {
 	int		len;
@@ -76,32 +30,6 @@ char	*connect_path(char *path, char *dir)
 		ft_strlcat(res, dir, len);
 	return (res);
 }
-
-// void	expand_dirs(t_ls_entry *root)
-// {
-// 	DIR			*d;
-// 	char		*path;
-// 	t_ls_entry	*inner;
-
-// 	struct dirent	*dirr;
-// 	struct stat		fileStat;
-
-// 	path = connect_path(root);
-// 	d = opendir(path);
-// 	while (d && (dirr = readdir(d)) != NULL)
-// 	{
-// 		stat(dirr->d_name, &fileStat);
-// 		if (dirr->d_type == DT_DIR)
-// 		{
-// 			if (!(!ft_strncmp(dirr->d_name, ".", 2) || !ft_strncmp(dirr->d_name, "..", 3)))
-// 			{
-// 				inner = new_dir(dirr->d_name, path);
-// 				ft_lstadd_back(&root->contents, ft_lstnew(inner));
-// 				expand_dirs(inner);
-// 			}
-// 		}
-// 	}
-// }
 
 void	ls_read(t_ls_entry *entry)
 {
@@ -155,7 +83,7 @@ void	ls_read(t_ls_entry *entry)
 			entry->total += fileStat.st_blocks;
 		if (ft_log(fileStat.st_size, 10) > entry->sizebuffer)
 			entry->sizebuffer = ft_log(fileStat.st_size, 10);
-		ft_memcpy(entry->sub_entries[i]->time, &fileStat.st_mtime, sizeof(time_t));
+		entry->sub_entries[i]->time = fileStat.st_mtime;
 		entry->sub_entries[i]->name = ft_strdup(_dirent->d_name);
 		if (S_ISDIR(fileStat.st_mode))
 		{
@@ -211,14 +139,6 @@ void	str_tolower(char *s)
 
 int	custom_strcmp(char *a, char *b)
 {
-	// if (!a && !b)
-	// 	return (0);
-	// if (!a)
-	// 	return -1;
-	// if (!b)
-	// 	return -1;
-	// return (strcoll(a, b));
-
 	char *ca = first_alnum(a);
 	char *cb = first_alnum(b);
 	int min = MIN(ft_strlen(a), ft_strlen(b));
@@ -259,11 +179,18 @@ int	custom_strcmp(char *a, char *b)
 	return (res);
 }
 
+int cmp_time(time_t t1, time_t t2) {
+
+    if (t1 < t2) return -1;
+    return 1;
+}
+
 int	find_next_entry(t_ls_entry **set, int set_size)
 {
 	int			i;
 	t_ls_vars	*ls_v;
 	int			r;
+	int			cmp;
 
 	ls_v = *persist_ls();
 	i = -1;
@@ -276,10 +203,19 @@ int	find_next_entry(t_ls_entry **set, int set_size)
 			r = i;
 		if (ls_v->option_f)
 			return (r);
-		if (ls_v->option_t && flagged_min(*set[r]->time, *set[i]->time))
-			r = i;
+		if (ls_v->option_t)
+		{
+			cmp = cmp_time(set[i]->time, set[r]->time);
+			if (!cmp)
+				cmp = custom_strcmp(set[r]->name, set[i]->name);
+			if (flagged_min(cmp, 0))
+				r = i;
+			continue;
+		}
 		else if (flagged_min(custom_strcmp(set[r]->name, set[i]->name), 0))
+		{
 			r = i;
+		}
 	}
 	return (r);
 }
@@ -347,7 +283,7 @@ void	quoted_name(char *name)
 		}
 		i++;
 	}
-	ft_printf("'%s' ", name);
+	ft_printf("'%s'", name);
 	return ;
 }
 
@@ -370,7 +306,7 @@ void	print_flagged(t_ls_entry *entry)
 		sub = entry->sub_entries[i];
 		if ((!ls_v->option_a && sub->name[0] == '.') && !ls_v->option_f)
 			continue ;
-		short_time = ft_strdup(ft_strchr(ctime(sub->time), ' '));
+		short_time = ft_strdup(ft_strchr(ctime(&sub->time), ' '));
 		ft_strrchr(short_time, ':')[0] = 0;
 		format = ft_asprintf("%s %s %s %s %%%lild %.16s ", sub->perms, sub->links, sub->user, sub->group, entry->sizebuffer, short_time);
 		ft_free(short_time);

@@ -3,10 +3,8 @@
 t_ls_entry	*new_entry()
 {
 	t_ls_entry	*res;
-	__time_t	*t;
 
 	res = ft_malloc(sizeof(t_ls_entry));
-	t = ft_malloc(sizeof(__time_t));
 	if (!res)
 		return (NULL);
 	*res = (t_ls_entry) {
@@ -17,7 +15,7 @@ t_ls_entry	*new_entry()
 		.user = NULL,
 		.group = NULL,
 		.size = 0,
-		.time = t,
+		.time = 0,
 		.name = NULL,
 	};
 	return (res);
